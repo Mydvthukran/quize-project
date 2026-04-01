@@ -1,8 +1,10 @@
 import { io } from 'socket.io-client';
 
 
-const API_BASE = 'https://learnloop-backend-6v64.onrender.com/api';
-const SOCKET_BASE = 'https://learnloop-backend-6v64.onrender.com';
+const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.'));
+const API_BASE = isLocalhost ? (import.meta.env.VITE_API_URL || 'http://localhost:5000/api') : 'https://learnloop-backend-6v64.onrender.com/api';
+const SOCKET_BASE = isLocalhost ? ((import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000').replace(/\/$/, '')) : 'https://learnloop-backend-6v64.onrender.com';
+console.log('[LearnLoop] API_BASE=', API_BASE, 'isLocalhost=', isLocalhost);
 async function request(path, options = {}) {
   const response = await fetch(`${API_BASE}${path}`, {
     headers: {
