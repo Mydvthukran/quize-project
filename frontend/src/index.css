@@ -1,0 +1,33 @@
+:root {
+  font-family: 'Space Grotesk', 'Segoe UI', Tahoma, sans-serif;
+  line-height: 1.45;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: #1e2f33;
+  background:
+    radial-gradient(circle at 20% 5%, rgba(243, 181, 98, 0.35), transparent 35%),
+    radial-gradient(circle at 80% 0%, rgba(23, 143, 148, 0.35), transparent 28%),
+    #f5f9fa;
+}
+
+h1,
+h2,
+h3 {
+  font-family: 'Sora', 'Trebuchet MS', sans-serif;
+  margin: 0 0 0.45rem;
+}
+
+ul {
+  padding-left: 1rem;
+}
