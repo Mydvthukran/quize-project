@@ -69,10 +69,34 @@ async function callOpenAI(prompt) {
   }
 
   if (lastError) {
-    throw lastError;
+    console.warn('LearnLoop AI fallback activated:', lastError.message);
   }
 
   return null;
+}
+
+function localFallbackExplanation(question, answer) {
+  return {
+    explanation: `The answer "${answer}" best matches the concept tested by "${question}" because it is the most direct and correct interpretation of the prompt.`,
+  };
+}
+
+function localFallbackCoach(topicStats) {
+  const topics = Array.isArray(topicStats) ? topicStats : [];
+  const weakTopics = topics
+    .filter((item) => (item.accuracy || 0) < 70)
+    .map((item) => item.topic)
+    .slice(0, 3);
+
+  return {
+    nextTopics: weakTopics.length ? weakTopics : ['Review core foundations', 'Practice mixed quizzes'],
+    weakConcepts: weakTopics.length ? weakTopics : ['Low-confidence topics', 'Frequently missed ideas'],
+    threeDayPlan: [
+      'Day 1: Review your weakest topic and summarize key ideas.',
+      'Day 2: Take a focused quiz on incorrect answers.',
+      'Day 3: Mix topics together and use explanations to close gaps.',
+    ],
+  };
 }
 
 function localFallbackQuiz({ topic, difficulty, questionCount }) {
@@ -118,48 +142,52 @@ function localFallbackQuiz({ topic, difficulty, questionCount }) {
 }
 
 export async function generateQuizAi(input) {
-  const prompt = buildQuizPrompt(input);
-  const aiResponse = await callOpenAI(prompt);
+  try {
+    const prompt = buildQuizPrompt(input);
+    const aiResponse = await callOpenAI(prompt);
 
-  if (!aiResponse) {
+    if (!aiResponse) {
+      return localFallbackQuiz(input);
+    }
+
+    return extractJsonFromText(aiResponse);
+  } catch (error) {
+    console.warn('LearnLoop quiz generation fallback:', error.message);
     return localFallbackQuiz(input);
   }
-
-  return extractJsonFromText(aiResponse);
 }
 
 export async function explainAnswerAi({ question, answer }) {
-  const prompt = buildExplanationPrompt({ question, answer });
-  const aiResponse = await callOpenAI(prompt);
+  try {
+    const prompt = buildExplanationPrompt({ question, answer });
+    const aiResponse = await callOpenAI(prompt);
 
-  if (!aiResponse) {
+    if (!aiResponse) {
+      return localFallbackExplanation(question, answer);
+    }
+
+    const parsed = extractJsonFromText(aiResponse);
     return {
-      explanation:
-        'This answer is correct because it aligns with the concept tested in the question and eliminates distractors that do not match the core definition.',
+      explanation: parsed.explanation || aiResponse,
     };
+  } catch (error) {
+    console.warn('LearnLoop explanation fallback:', error.message);
+    return localFallbackExplanation(question, answer);
   }
-
-  const parsed = extractJsonFromText(aiResponse);
-  return {
-    explanation: parsed.explanation || aiResponse,
-  };
 }
 
 export async function coachSuggestionsAi({ topicStats }) {
-  const prompt = buildCoachPrompt({ topicStats });
-  const aiResponse = await callOpenAI(prompt);
+  try {
+    const prompt = buildCoachPrompt({ topicStats });
+    const aiResponse = await callOpenAI(prompt);
 
-  if (!aiResponse) {
-    return {
-      nextTopics: ['Review weak topics first', 'Practice medium-level quizzes'],
-      weakConcepts: ['Low accuracy topics', 'Slow response-time topics'],
-      threeDayPlan: [
-        'Day 1: revise low-accuracy concepts with flashcards',
-        'Day 2: take adaptive quiz focused on mistakes',
-        'Day 3: complete mixed hard quiz and reflect on explanations',
-      ],
-    };
+    if (!aiResponse) {
+      return localFallbackCoach(topicStats);
+    }
+
+    return extractJsonFromText(aiResponse);
+  } catch (error) {
+    console.warn('LearnLoop coach fallback:', error.message);
+    return localFallbackCoach(topicStats);
   }
-
-  return extractJsonFromText(aiResponse);
 }
