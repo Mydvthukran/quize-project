@@ -14,7 +14,7 @@ services:
       - key: OPENAI_MODEL
         value: gpt-4o-mini
       - key: FRONTEND_ORIGIN
-        sync: false
+        value: https://learnloop-frontend-oabw.onrender.com
 
   - type: web
     name: learnloop-frontend
@@ -28,6 +28,6 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        sync: false
+        value: https://learnloop-backend-6v64.onrender.com/api
       - key: VITE_SOCKET_URL
-        sync: false
+        value: https://learnloop-backend-6v64.onrender.com
