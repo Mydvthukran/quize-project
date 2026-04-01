@@ -1,7 +1,16 @@
 import { io } from 'socket.io-client';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-const SOCKET_BASE = (import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000').replace(/\/$/, '');
+// Determine if we're in production on Render
+const isProduction = typeof window !== 'undefined' && window.location.hostname === 'learnloop-frontend-oabw.onrender.com';
+
+// Use environment variables if available, otherwise use hardcoded production URLs or localhost
+const API_BASE = isProduction 
+  ? 'https://learnloop-backend-6v64.onrender.com/api'
+  : (import.meta.env.VITE_API_URL || 'http://localhost:5000/api');
+  
+const SOCKET_BASE = isProduction
+  ? 'https://learnloop-backend-6v64.onrender.com'
+  : ((import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000').replace(/\/$/, ''));
 
 async function request(path, options = {}) {
   const response = await fetch(`${API_BASE}${path}`, {
