@@ -16,11 +16,16 @@ services:
       - key: FRONTEND_ORIGIN
         sync: false
 
-  - type: static_site
+  - type: web
     name: learnloop-frontend
     rootDir: frontend
+    env: static
     buildCommand: npm install && npm run build
     staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
     envVars:
       - key: VITE_API_URL
         sync: false
