@@ -1,5 +1,7 @@
 import { io } from 'socket.io-client';
 
+// PRODUCTION DEPLOYMENT FIX - Render backend at https://learnloop-backend-6v64.onrender.com
+// Built: 2026-04-02T21:15:00Z
 
 const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.'));
 const API_BASE = isLocalhost ? (import.meta.env.VITE_API_URL || 'http://localhost:5000/api') : 'https://learnloop-backend-6v64.onrender.com/api';
