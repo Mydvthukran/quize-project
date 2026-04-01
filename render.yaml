@@ -16,7 +16,7 @@ services:
       - key: FRONTEND_ORIGIN
         sync: false
 
-  - type: static
+  - type: static_site
     name: learnloop-frontend
     rootDir: frontend
     buildCommand: npm install && npm run build
