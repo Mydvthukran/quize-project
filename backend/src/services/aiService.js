@@ -2,6 +2,57 @@ import { buildCoachPrompt, buildExplanationPrompt, buildQuizPrompt } from './pro
 
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 
+const STOP_WORDS = new Set([
+  'the',
+  'and',
+  'for',
+  'with',
+  'that',
+  'this',
+  'from',
+  'into',
+  'your',
+  'about',
+  'what',
+  'when',
+  'where',
+  'which',
+  'quiz',
+  'notes',
+  'tutorial',
+  'video',
+  'learn',
+  'learnloop',
+  'topic',
+  'converts',
+  'convert',
+  'uses',
+  'use',
+  'produces',
+  'produce',
+  'includes',
+  'include',
+  'involves',
+  'involve',
+  'creates',
+  'create',
+  'explains',
+  'explain',
+  'shows',
+  'show',
+  'describes',
+  'describe',
+  'concept',
+  'idea',
+  'lesson',
+  'material',
+  'energy',
+  'chemical',
+  'process',
+  'study',
+  'about',
+]);
+
 function getApiKeys() {
   const primary = process.env.OPENAI_API_KEY || '';
   const keyList = (process.env.OPENAI_API_KEYS || '')
@@ -23,6 +74,30 @@ function extractJsonFromText(text) {
     }
     throw new Error('Failed to parse AI JSON response.');
   }
+}
+
+function extractKeywords(source = '', topic = '') {
+  const text = `${topic} ${source}`.toLowerCase().replace(/https?:\/\/\S+/g, ' ');
+  const tokens = text.match(/[a-z0-9][a-z0-9-]{2,}/g) || [];
+  const topicTokens = (topic.toLowerCase().match(/[a-z0-9][a-z0-9-]{2,}/g) || []).filter(Boolean);
+  const keywords = [];
+
+  for (const token of tokens) {
+    if (STOP_WORDS.has(token) || topicTokens.includes(token)) continue;
+    if (!keywords.includes(token)) {
+      keywords.push(token);
+    }
+  }
+
+  return keywords.slice(0, 8);
+}
+
+function titleCase(value = '') {
+  return value
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map((item) => item.charAt(0).toUpperCase() + item.slice(1))
+    .join(' ');
 }
 
 async function callOpenAI(prompt) {
@@ -99,19 +174,31 @@ function localFallbackCoach(topicStats) {
   };
 }
 
-function localFallbackQuiz({ topic, difficulty, questionCount }) {
+function localFallbackQuiz({ topic, difficulty, questionCount, source = '', sourceType = 'text' }) {
   const level = difficulty.toLowerCase();
+  const keywords = extractKeywords(source, topic);
+  const anchors = keywords.length ? keywords : [topic || 'core concept'];
+  const contextLabel = sourceType === 'url' ? 'tutorial' : 'source';
+
   return {
-    questions: Array.from({ length: questionCount }).map((_, index) => {
+    questions: Array.from({ length: Number(questionCount) }).map((_, index) => {
       const number = index + 1;
+      const anchor = titleCase(anchors[index % anchors.length]);
+      const secondary = titleCase(anchors[(index + 1) % anchors.length]);
+
       if (index % 3 === 0) {
         return {
           type: 'mcq',
-          question: `(${level}) Which statement best summarizes ${topic} concept ${number}?`,
-          options: ['Core definition', 'Unrelated fact', 'Historical date', 'Random guess'],
-          answer: 'Core definition',
-          explanation: `${topic} concept ${number} focuses on understanding definitions before advanced use.`,
-          topic,
+          question: `(${level}) Which statement best describes the role of ${anchor} in ${topic} from the ${contextLabel}?`,
+          options: [
+            `${anchor} as the main idea`,
+            `A random detail about ${secondary}`,
+            `An unrelated historical fact`,
+            `A distractor outside the lesson`,
+          ],
+          answer: `${anchor} as the main idea`,
+          explanation: `${anchor} is the core idea the source connects to ${topic}.`,
+          topic: topic || anchor,
           difficulty: level,
         };
       }
@@ -119,22 +206,22 @@ function localFallbackQuiz({ topic, difficulty, questionCount }) {
       if (index % 3 === 1) {
         return {
           type: 'true_false',
-          question: `(${level}) True or False: ${topic} requires context-aware practice for mastery.`,
+          question: `(${level}) True or False: The ${contextLabel} presents ${anchor} as a key part of ${topic}.`,
           options: ['True', 'False'],
           answer: 'True',
-          explanation: 'Repeated contextual practice improves retention and transfer.',
-          topic,
+          explanation: `${anchor} appears as a direct idea from the lesson, so the statement is true.`,
+          topic: topic || anchor,
           difficulty: level,
         };
       }
 
       return {
         type: 'short',
-        question: `(${level}) In one sentence, explain why ${topic} matters in real applications.`,
+        question: `(${level}) In one sentence, explain how ${anchor} contributes to understanding ${topic}.`,
         options: [],
-        answer: `${topic} matters because it connects theory to practical problem-solving outcomes.`,
-        explanation: 'The best short answers mention both concept and practical impact.',
-        topic,
+        answer: `${anchor} supports ${topic} by connecting the specific lesson idea to the broader concept.`,
+        explanation: 'A strong short answer links the source idea back to the main topic.',
+        topic: topic || anchor,
         difficulty: level,
       };
     }),

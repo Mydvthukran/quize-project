@@ -41,6 +41,18 @@ function App() {
     return [...dashboard.history].reverse().slice(-8)
   }, [dashboard])
 
+  const heroMetrics = useMemo(() => {
+    const latestAccuracy = result?.result?.accuracy ?? dashboard?.history?.[0]?.accuracy ?? 0
+    const masteredTopics = dashboard?.topicStats?.filter((item) => (item.accuracy || 0) >= 80).length || 0
+
+    return {
+      latestAccuracy,
+      masteredTopics,
+      bookmarks: bookmarks.length,
+      flashcards: flashcards.length,
+    }
+  }, [dashboard, result, bookmarks.length, flashcards.length])
+
   useEffect(() => {
     const socket = getQuizSocket()
 
@@ -235,347 +247,461 @@ function App() {
   }
 
   return (
-    <div className="page-shell">
-      <header className="hero-block">
-        <div>
-          <p className="eyebrow">Intelligent Recall Platform</p>
-          <h1>LearnLoop</h1>
-          <p className="hero-copy">
-            Transform tutorials, links, and notes into adaptive AI quizzes that diagnose weak areas,
-            explain mistakes, and build exam-ready confidence.
-          </p>
+    <div className={`app-shell ${darkMode ? 'theme-dark' : ''}`}>
+      <div className="ambient ambient-a" />
+      <div className="ambient ambient-b" />
+
+      <header className="topbar panel">
+        <div className="brand-lockup">
+          <div className="brand-mark">LL</div>
+          <div>
+            <p className="brand-name">LearnLoop</p>
+            <p className="brand-tag">Adaptive quiz studio</p>
+          </div>
         </div>
-        <div className="hero-controls">
-          <button type="button" onClick={() => setDarkMode((previous) => !previous)}>
-            {darkMode ? 'Switch to Light' : 'Switch to Dark'}
+
+        <div className="topbar-actions">
+          <button type="button" className="ghost-btn" onClick={() => setDarkMode((previous) => !previous)}>
+            {darkMode ? 'Light mode' : 'Dark mode'}
           </button>
-          <button type="button" onClick={loadOfflineQuiz}>
-            Load Offline Quiz
+          <button type="button" className="ghost-btn" onClick={loadOfflineQuiz}>
+            Offline quiz
           </button>
-          <p className="status">{statusMessage}</p>
+          <span className="status-chip">{statusMessage}</span>
         </div>
       </header>
 
-      <nav className="view-nav">
-        {['quiz', 'dashboard', 'revision', 'multiplayer', 'builder'].map((view) => (
-          <button
-            key={view}
-            type="button"
-            className={activeView === view ? 'active' : ''}
-            onClick={() => setActiveView(view)}
-          >
-            {view}
-          </button>
-        ))}
-      </nav>
+      <section className="hero panel">
+        <div className="hero-copy">
+          <p className="eyebrow">AI-powered recall engine</p>
+          <h1>Turn notes into quizzes that stay on topic.</h1>
+          <p className="hero-copy-text">
+            Paste tutorials, links, or study notes and LearnLoop will generate focused questions,
+            explain mistakes, and adapt practice around weak areas.
+          </p>
+          <div className="hero-pills">
+            <span>MCQ</span>
+            <span>True / False</span>
+            <span>Short Answer</span>
+            <span>Spaced Repetition</span>
+          </div>
+        </div>
 
-      <section className="input-grid">
-        <label>
-          Source Type
-          <select value={sourceType} onChange={(event) => setSourceType(event.target.value)}>
-            <option value="text">Text / Notes</option>
-            <option value="url">Tutorial / YouTube URL</option>
-            <option value="topic">Topic only</option>
-          </select>
-        </label>
-        <label>
-          Topic
-          <input value={topic} onChange={(event) => setTopic(event.target.value)} placeholder="Operating Systems" />
-        </label>
-        <label>
-          Difficulty
-          <select value={difficulty} onChange={(event) => setDifficulty(event.target.value)}>
-            <option value="easy">Easy</option>
-            <option value="medium">Medium</option>
-            <option value="hard">Hard</option>
-          </select>
-        </label>
-        <label>
-          Questions
-          <input
-            type="number"
-            min="3"
-            max="20"
-            value={questionCount}
-            onChange={(event) => setQuestionCount(event.target.value)}
-          />
-        </label>
+        <div className="hero-metrics">
+          <article className="metric-card accent">
+            <span>Latest accuracy</span>
+            <strong>{heroMetrics.latestAccuracy}%</strong>
+          </article>
+          <article className="metric-card">
+            <span>Mastered topics</span>
+            <strong>{heroMetrics.masteredTopics}</strong>
+          </article>
+          <article className="metric-card">
+            <span>Flashcards saved</span>
+            <strong>{heroMetrics.flashcards}</strong>
+          </article>
+          <article className="metric-card">
+            <span>Bookmarks</span>
+            <strong>{heroMetrics.bookmarks}</strong>
+          </article>
+        </div>
       </section>
 
-      <textarea
-        className="source-box"
-        value={source}
-        onChange={(event) => setSource(event.target.value)}
-        placeholder="Paste tutorial text, doc summary, URL, or your learning notes..."
-      />
+      <div className="workspace-grid">
+        <aside className="panel composer-panel">
+          <div className="section-heading">
+            <div>
+              <p className="section-kicker">Quiz composer</p>
+              <h2>Build your next round</h2>
+            </div>
+            <div className="pill-row">
+              {['quiz', 'dashboard', 'revision', 'multiplayer', 'builder'].map((view) => (
+                <button
+                  key={view}
+                  type="button"
+                  className={activeView === view ? 'pill active' : 'pill'}
+                  onClick={() => setActiveView(view)}
+                >
+                  {view}
+                </button>
+              ))}
+            </div>
+          </div>
 
-      <div className="action-row">
-        <button type="button" disabled={isLoading} onClick={generateQuiz}>
-          {isLoading ? 'Generating...' : 'Generate AI Quiz'}
-        </button>
-        <button type="button" disabled={!quiz || isLoading} onClick={submitQuiz}>
-          Submit Quiz
-        </button>
-      </div>
+          <section className="settings-grid">
+            <label>
+              Source type
+              <select value={sourceType} onChange={(event) => setSourceType(event.target.value)}>
+                <option value="text">Text / notes</option>
+                <option value="url">Tutorial / YouTube URL</option>
+                <option value="topic">Topic only</option>
+              </select>
+            </label>
+            <label>
+              Topic
+              <input value={topic} onChange={(event) => setTopic(event.target.value)} placeholder="Operating Systems" />
+            </label>
+            <label>
+              Difficulty
+              <select value={difficulty} onChange={(event) => setDifficulty(event.target.value)}>
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </label>
+            <label>
+              Questions
+              <input
+                type="number"
+                min="3"
+                max="20"
+                value={questionCount}
+                onChange={(event) => setQuestionCount(event.target.value)}
+              />
+            </label>
+          </section>
 
-      {result && (
-        <section className="card">
-          <h2>Last Quiz Result</h2>
-          <p>
-            Accuracy: {result.result.accuracy}% ({result.result.correct}/{result.result.total})
-          </p>
-          <p>XP earned: {result.earnedXp}</p>
-          <p>Current streak: {result.streak}</p>
-        </section>
-      )}
+          <label className="source-field">
+            Source material
+            <textarea
+              className="source-box premium"
+              value={source}
+              onChange={(event) => setSource(event.target.value)}
+              placeholder="Paste tutorial text, doc summary, URL, or your learning notes..."
+            />
+          </label>
 
-      {adaptive && (
-        <section className="card">
-          <h2>Smart Practice Mode</h2>
-          <p>
-            Recommended next topic: <strong>{adaptive.recommendedTopic}</strong> ({adaptive.recommendedDifficulty})
-          </p>
-          <p>Weak topics: {(adaptive.weakTopics || []).join(', ') || 'No weak topics yet'}</p>
-        </section>
-      )}
+          <div className="action-row primary-actions">
+            <button type="button" className="primary-btn" disabled={isLoading} onClick={generateQuiz}>
+              {isLoading ? 'Generating...' : 'Generate AI Quiz'}
+            </button>
+            <button type="button" className="secondary-btn" disabled={!quiz || isLoading} onClick={submitQuiz}>
+              Submit Quiz
+            </button>
+          </div>
 
-      {activeView === 'quiz' && quiz && (
-        <section className="card">
-          <h2>
-            Quiz: {quiz.topic} ({quiz.difficulty})
-          </h2>
-          {quiz.questions.map((question) => (
-            <article key={question.id} className="question-card">
-              <p className="question-title">
-                [{question.type}] {question.question}
+          {adaptive && (
+            <div className="mini-panel">
+              <div>
+                <p className="section-kicker">Smart practice</p>
+                <h3>Next focus</h3>
+              </div>
+              <p>
+                <strong>{adaptive.recommendedTopic}</strong> · {adaptive.recommendedDifficulty}
               </p>
-              {question.options?.length > 0 ? (
-                <div className="option-grid">
-                  {question.options.map((option) => (
-                    <label key={option}>
-                      <input
-                        type="radio"
-                        name={question.id}
-                        checked={answers[question.id] === option}
-                        onChange={() =>
+              <p className="muted">{(adaptive.weakTopics || []).join(', ') || 'No weak topics yet'}</p>
+            </div>
+          )}
+
+          {result && (
+            <div className="mini-panel result-panel">
+              <div>
+                <p className="section-kicker">Last result</p>
+                <h3>{result.result.accuracy}% accuracy</h3>
+              </div>
+              <div className="result-stats">
+                <span>{result.result.correct}/{result.result.total} correct</span>
+                <span>+{result.earnedXp} XP</span>
+                <span>{result.streak} streak</span>
+              </div>
+            </div>
+          )}
+        </aside>
+
+        <main className="studio-panel">
+          {activeView === 'quiz' && quiz && (
+            <section className="panel content-card hero-stage">
+              <div className="section-heading compact">
+                <div>
+                  <p className="section-kicker">Live quiz</p>
+                  <h2>{quiz.topic}</h2>
+                </div>
+                <span className="badge">{quiz.difficulty}</span>
+              </div>
+
+              <div className="question-stack">
+                {quiz.questions.map((question) => (
+                  <article key={question.id} className="question-card premium">
+                    <div className="question-head">
+                      <span className="question-type">{question.type}</span>
+                      <span className="question-topic">{question.topic}</span>
+                    </div>
+                    <p className="question-title">{question.question}</p>
+                    {question.options?.length > 0 ? (
+                      <div className="option-grid premium">
+                        {question.options.map((option) => (
+                          <label key={option} className="option-chip">
+                            <input
+                              type="radio"
+                              name={question.id}
+                              checked={answers[question.id] === option}
+                              onChange={() =>
+                                setAnswers((previous) => ({
+                                  ...previous,
+                                  [question.id]: option,
+                                }))
+                              }
+                            />
+                            <span>{option}</span>
+                          </label>
+                        ))}
+                      </div>
+                    ) : (
+                      <textarea
+                        className="answer-box"
+                        value={answers[question.id] || ''}
+                        placeholder="Write your short answer"
+                        onChange={(event) =>
                           setAnswers((previous) => ({
                             ...previous,
-                            [question.id]: option,
+                            [question.id]: event.target.value,
                           }))
                         }
                       />
-                      {option}
-                    </label>
+                    )}
+                    <div className="question-actions">
+                      <button type="button" className="ghost-btn" onClick={() => explain(question)}>
+                        Explain answer
+                      </button>
+                      <button type="button" className="ghost-btn" onClick={() => bookmark(question)}>
+                        Bookmark
+                      </button>
+                    </div>
+                    {explanations[question.id] && <p className="explanation">{explanations[question.id]}</p>}
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {activeView === 'dashboard' && dashboard && (
+            <section className="panel content-card">
+              <div className="section-heading compact">
+                <div>
+                  <p className="section-kicker">Topic dashboard</p>
+                  <h2>Performance overview</h2>
+                </div>
+              </div>
+
+              <div className="stats-grid premium">
+                <article className="mini-metric">
+                  <span>XP</span>
+                  <strong>{dashboard.profile.xp}</strong>
+                </article>
+                <article className="mini-metric">
+                  <span>Streak</span>
+                  <strong>{dashboard.profile.streak} days</strong>
+                </article>
+                <article className="mini-metric">
+                  <span>Badges</span>
+                  <strong>{dashboard.profile.badges.join(', ') || 'None'}</strong>
+                </article>
+              </div>
+
+              <div className="chart-card">
+                <h3>Accuracy trend</h3>
+                <div className="chart-row premium">
+                  {accuracySeries.map((item) => (
+                    <div key={item.id} className="chart-col">
+                      <span>{item.accuracy}%</span>
+                      <div style={{ height: `${Math.max(12, item.accuracy)}%` }} />
+                      <small>{item.topic.slice(0, 10)}</small>
+                    </div>
                   ))}
                 </div>
-              ) : (
-                <textarea
-                  value={answers[question.id] || ''}
-                  placeholder="Write your short answer"
-                  onChange={(event) =>
-                    setAnswers((previous) => ({
-                      ...previous,
-                      [question.id]: event.target.value,
-                    }))
-                  }
-                />
+              </div>
+
+              <div className="two-column-list">
+                <section>
+                  <h3>Daily challenges</h3>
+                  <ul className="clean-list">
+                    {dailyChallenges.map((challenge) => (
+                      <li key={challenge.id}>
+                        <span>{challenge.title}</span>
+                        <strong>{challenge.xp} XP</strong>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+                <section>
+                  <h3>Leaderboard</h3>
+                  <ul className="clean-list">
+                    {dashboard.leaderboard.map((player) => (
+                      <li key={player.id}>
+                        <span>{player.name}</span>
+                        <strong>{player.xp} XP</strong>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              </div>
+
+              {coach && (
+                <div className="mini-panel coach-panel">
+                  <p className="section-kicker">Performance AI coach</p>
+                  <h3>What to study next</h3>
+                  <p>{(coach.nextTopics || []).join(', ')}</p>
+                  <p className="muted">{(coach.weakConcepts || []).join(', ')}</p>
+                  <ul className="coach-plan">
+                    {(coach.threeDayPlan || []).map((plan) => (
+                      <li key={plan}>{plan}</li>
+                    ))}
+                  </ul>
+                </div>
               )}
-              <div className="question-actions">
-                <button type="button" onClick={() => explain(question)}>
-                  Explain Answer
-                </button>
-                <button type="button" onClick={() => bookmark(question)}>
-                  Bookmark
-                </button>
+            </section>
+          )}
+
+          {activeView === 'revision' && (
+            <section className="panel content-card">
+              <div className="section-heading compact">
+                <div>
+                  <p className="section-kicker">Revision mode</p>
+                  <h2>Flashcards and bookmarks</h2>
+                </div>
               </div>
-              {explanations[question.id] && <p className="explanation">{explanations[question.id]}</p>}
-            </article>
-          ))}
-        </section>
-      )}
 
-      {activeView === 'dashboard' && dashboard && (
-        <section className="card">
-          <h2>Topic Dashboard</h2>
-          <div className="stats-grid">
-            <div>
-              <p className="metric">XP</p>
-              <strong>{dashboard.profile.xp}</strong>
-            </div>
-            <div>
-              <p className="metric">Streak</p>
-              <strong>{dashboard.profile.streak} days</strong>
-            </div>
-            <div>
-              <p className="metric">Badges</p>
-              <strong>{dashboard.profile.badges.join(', ') || 'None'}</strong>
-            </div>
-          </div>
-
-          <h3>Accuracy Trend</h3>
-          <div className="chart-row">
-            {accuracySeries.map((item) => (
-              <div key={item.id} className="chart-col">
-                <span>{item.accuracy}%</span>
-                <div style={{ height: `${Math.max(12, item.accuracy)}%` }} />
-                <small>{item.topic.slice(0, 8)}</small>
-              </div>
-            ))}
-          </div>
-
-          <h3>Daily Challenges</h3>
-          <ul>
-            {dailyChallenges.map((challenge) => (
-              <li key={challenge.id}>
-                {challenge.title} - {challenge.xp} XP
-              </li>
-            ))}
-          </ul>
-
-          <h3>Leaderboard</h3>
-          <ul>
-            {dashboard.leaderboard.map((player) => (
-              <li key={player.id}>
-                {player.name} - XP {player.xp} - streak {player.streak}
-              </li>
-            ))}
-          </ul>
-
-          {coach && (
-            <>
-              <h3>Performance AI Coach</h3>
-              <p>Next Topics: {(coach.nextTopics || []).join(', ')}</p>
-              <p>Weak Concepts: {(coach.weakConcepts || []).join(', ')}</p>
-              <ul>
-                {(coach.threeDayPlan || []).map((plan) => (
-                  <li key={plan}>{plan}</li>
+              <div className="flashcard-grid premium">
+                {flashcards.map((card) => (
+                  <article key={card.id} className="flashcard">
+                    <span>Question</span>
+                    <p>{card.front}</p>
+                    <span>Answer</span>
+                    <p>{card.back}</p>
+                  </article>
                 ))}
-              </ul>
-            </>
+                {!flashcards.length && <p className="empty-state">No flashcards yet. Submit a quiz to generate them.</p>}
+              </div>
+
+              <div>
+                <h3>Bookmarked questions</h3>
+                <ul className="clean-list bookmarks-list">
+                  {bookmarks.map((item) => (
+                    <li key={item.id}>{item.question}</li>
+                  ))}
+                </ul>
+              </div>
+            </section>
           )}
-        </section>
-      )}
 
-      {activeView === 'revision' && (
-        <section className="card">
-          <h2>Revision Mode</h2>
-          <p>Flashcards from your mistakes:</p>
-          <div className="flashcard-grid">
-            {flashcards.map((card) => (
-              <article key={card.id} className="flashcard">
-                <p>Q: {card.front}</p>
-                <p>A: {card.back}</p>
-              </article>
-            ))}
-            {!flashcards.length && <p>No flashcards yet. Submit a quiz to generate them.</p>}
-          </div>
-          <h3>Bookmarked Difficult Questions</h3>
-          <ul>
-            {bookmarks.map((item) => (
-              <li key={item.id}>{item.question}</li>
-            ))}
-          </ul>
-        </section>
-      )}
+          {activeView === 'multiplayer' && (
+            <section className="panel content-card">
+              <div className="section-heading compact">
+                <div>
+                  <p className="section-kicker">Real-time rooms</p>
+                  <h2>Multiplayer quiz lobby</h2>
+                </div>
+              </div>
 
-      {activeView === 'multiplayer' && (
-        <section className="card">
-          <h2>Real-time Multiplayer Quiz Rooms</h2>
-          <div className="input-grid">
-            <label>
-              Your Name
-              <input value={playerName} onChange={(event) => setPlayerName(event.target.value)} />
-            </label>
-            <label>
-              Room Name
-              <input value={roomName} onChange={(event) => setRoomName(event.target.value)} />
-            </label>
-            <label>
-              Room ID
-              <input value={joinRoomId} onChange={(event) => setJoinRoomId(event.target.value)} />
-            </label>
-          </div>
-          <div className="action-row">
-            <button type="button" onClick={createRoom}>
-              Create Room
-            </button>
-            <button type="button" onClick={joinRoom}>
-              Join Room
-            </button>
-            <button type="button" onClick={startRoom}>
-              Start Live Quiz
-            </button>
-          </div>
-          {roomState && (
-            <div>
-              <p>
-                Room {roomState.id} ({roomState.roomName})
-              </p>
-              <p>Players: {(roomState.players || []).map((player) => player.name).join(', ')}</p>
-              <p>{roomState.started ? 'Quiz started' : 'Waiting for host to start'}</p>
-            </div>
+              <div className="settings-grid lobby-grid">
+                <label>
+                  Your name
+                  <input value={playerName} onChange={(event) => setPlayerName(event.target.value)} />
+                </label>
+                <label>
+                  Room name
+                  <input value={roomName} onChange={(event) => setRoomName(event.target.value)} />
+                </label>
+                <label>
+                  Room ID
+                  <input value={joinRoomId} onChange={(event) => setJoinRoomId(event.target.value)} />
+                </label>
+              </div>
+
+              <div className="action-row">
+                <button type="button" className="primary-btn" onClick={createRoom}>
+                  Create room
+                </button>
+                <button type="button" className="secondary-btn" onClick={joinRoom}>
+                  Join room
+                </button>
+                <button type="button" className="ghost-btn" onClick={startRoom}>
+                  Start live quiz
+                </button>
+              </div>
+
+              {roomState && (
+                <div className="mini-panel">
+                  <h3>{roomState.roomName}</h3>
+                  <p>Room {roomState.id}</p>
+                  <p>Players: {(roomState.players || []).map((player) => player.name).join(', ')}</p>
+                  <p>{roomState.started ? 'Quiz started' : 'Waiting for host to start'}</p>
+                </div>
+              )}
+            </section>
           )}
-        </section>
-      )}
 
-      {activeView === 'builder' && (
-        <section className="card">
-          <h2>Custom Quiz Builder</h2>
-          <label>
-            Type
-            <select
-              value={customDraft.type}
-              onChange={(event) => setCustomDraft((previous) => ({ ...previous, type: event.target.value }))}
-            >
-              <option value="mcq">MCQ</option>
-              <option value="true_false">True / False</option>
-              <option value="short">Short Answer</option>
-            </select>
-          </label>
-          <label>
-            Question
-            <textarea
-              value={customDraft.question}
-              onChange={(event) => setCustomDraft((previous) => ({ ...previous, question: event.target.value }))}
-            />
-          </label>
-          {customDraft.type === 'mcq' && (
-            <div className="option-grid">
-              {customDraft.options.map((option, index) => (
-                <input
-                  key={`${index}`}
-                  value={option}
-                  placeholder={`Option ${index + 1}`}
-                  onChange={(event) =>
-                    setCustomDraft((previous) => {
-                      const updated = [...previous.options]
-                      updated[index] = event.target.value
-                      return { ...previous, options: updated }
-                    })
-                  }
+          {activeView === 'builder' && (
+            <section className="panel content-card">
+              <div className="section-heading compact">
+                <div>
+                  <p className="section-kicker">Custom builder</p>
+                  <h2>Write your own quiz</h2>
+                </div>
+              </div>
+
+              <label>
+                Type
+                <select
+                  value={customDraft.type}
+                  onChange={(event) => setCustomDraft((previous) => ({ ...previous, type: event.target.value }))}
+                >
+                  <option value="mcq">MCQ</option>
+                  <option value="true_false">True / False</option>
+                  <option value="short">Short Answer</option>
+                </select>
+              </label>
+
+              <label>
+                Question
+                <textarea
+                  className="source-box premium"
+                  value={customDraft.question}
+                  onChange={(event) => setCustomDraft((previous) => ({ ...previous, question: event.target.value }))}
                 />
-              ))}
-            </div>
-          )}
-          <label>
-            Correct Answer
-            <input
-              value={customDraft.answer}
-              onChange={(event) => setCustomDraft((previous) => ({ ...previous, answer: event.target.value }))}
-            />
-          </label>
-          <div className="action-row">
-            <button type="button" onClick={pushCustomQuestion}>
-              Add Question
-            </button>
-            <button type="button" onClick={useCustomQuiz}>
-              Use Custom Quiz
-            </button>
-          </div>
-          <p>{customQuestions.length} custom questions created.</p>
-        </section>
-      )}
+              </label>
 
+              {customDraft.type === 'mcq' && (
+                <div className="option-grid premium">
+                  {customDraft.options.map((option, index) => (
+                    <input
+                      key={`${index}`}
+                      value={option}
+                      placeholder={`Option ${index + 1}`}
+                      onChange={(event) =>
+                        setCustomDraft((previous) => {
+                          const updated = [...previous.options]
+                          updated[index] = event.target.value
+                          return { ...previous, options: updated }
+                        })
+                      }
+                    />
+                  ))}
+                </div>
+              )}
+
+              <label>
+                Correct answer
+                <input
+                  value={customDraft.answer}
+                  onChange={(event) => setCustomDraft((previous) => ({ ...previous, answer: event.target.value }))}
+                />
+              </label>
+
+              <div className="action-row">
+                <button type="button" className="primary-btn" onClick={pushCustomQuestion}>
+                  Add question
+                </button>
+                <button type="button" className="secondary-btn" onClick={useCustomQuiz}>
+                  Use custom quiz
+                </button>
+              </div>
+
+              <p className="muted">{customQuestions.length} custom questions created.</p>
+            </section>
+          )}
+        </main>
+      </div>
     </div>
   )
 }

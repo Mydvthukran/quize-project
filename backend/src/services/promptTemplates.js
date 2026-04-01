@@ -1,9 +1,59 @@
+function extractFocusTerms(source = '', topic = '') {
+  const text = `${topic} ${source}`.toLowerCase();
+  const tokens = text.match(/[a-z0-9][a-z0-9-]{2,}/g) || [];
+  const stopWords = new Set([
+    'the',
+    'and',
+    'for',
+    'with',
+    'that',
+    'this',
+    'from',
+    'into',
+    'your',
+    'about',
+    'quiz',
+    'notes',
+    'tutorial',
+    'video',
+    'learn',
+    'learnloop',
+  ]);
+
+  const focusTerms = [];
+  for (const token of tokens) {
+    if (stopWords.has(token)) continue;
+    if (!focusTerms.includes(token)) {
+      focusTerms.push(token);
+    }
+  }
+
+  return focusTerms.slice(0, 8);
+}
+
 export function buildQuizPrompt({ sourceType, source, topic, difficulty, questionCount }) {
-  return `Create ${questionCount} quiz questions for ${topic || 'the provided content'}.
+  const focusTerms = extractFocusTerms(source, topic);
+  const sourcePreview = source.trim().replace(/\s+/g, ' ').slice(0, 700) || 'No source text was provided.';
+
+  return `You are writing a study quiz that must stay tightly aligned to the user's material.
+
+Topic: ${topic || 'General Learning'}
 Difficulty: ${difficulty}
-SourceType: ${sourceType}
-Source: ${source}
-Return strict JSON with this shape:
+Question count: ${questionCount}
+Source type: ${sourceType}
+Key terms to anchor on: ${focusTerms.length ? focusTerms.join(', ') : topic || 'general foundations'}
+
+Source preview:
+${sourcePreview}
+
+Rules:
+- Stay on topic. Do not ask unrelated trivia.
+- Use the source preview and key terms to shape every question.
+- Mix MCQ, True/False, and Short Answer.
+- Keep explanations short and directly tied to the concept tested.
+- If the source is thin, stay close to the topic and foundational concepts.
+
+Return strict JSON with this exact shape:
 {
   \"questions\": [
     {

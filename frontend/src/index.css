@@ -1,11 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap');
+
 :root {
-  font-family: 'Space Grotesk', 'Segoe UI', Tahoma, sans-serif;
+  font-family: 'Manrope', 'Segoe UI', Tahoma, sans-serif;
   line-height: 1.45;
   font-weight: 400;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: #10202b;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(34, 147, 255, 0.14), transparent 28%),
+    radial-gradient(circle at 90% 8%, rgba(240, 180, 92, 0.16), transparent 24%),
+    #eef4f8;
 }
 
 * {
@@ -14,20 +21,29 @@
 
 body {
   margin: 0;
+  min-height: 100vh;
   color: #1e2f33;
-  background:
-    radial-gradient(circle at 20% 5%, rgba(243, 181, 98, 0.35), transparent 35%),
-    radial-gradient(circle at 80% 0%, rgba(23, 143, 148, 0.35), transparent 28%),
-    #f5f9fa;
+  background: transparent;
 }
 
 h1,
 h2,
 h3 {
-  font-family: 'Sora', 'Trebuchet MS', sans-serif;
+  font-family: 'Sora', 'Manrope', sans-serif;
   margin: 0 0 0.45rem;
 }
 
 ul {
   padding-left: 1rem;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
 }
