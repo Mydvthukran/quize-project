@@ -1,12 +1,31 @@
 import { io } from 'socket.io-client';
 
-// PRODUCTION DEPLOYMENT FIX - Render backend at https://learnloop-backend-6v64.onrender.com
-// Built: 2026-04-02T21:15:00Z
+// Determine if running in development or production
+function getApiUrl() {
+  if (typeof window === 'undefined') {
+    return 'https://learnloop-backend-6v64.onrender.com/api';
+  }
+  const port = window.location.port;
+  const isDev = port === '5173' || port === '5174';
+  const isLocalIP = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  return (isDev || isLocalIP) ? 'http://localhost:5000/api' : 'https://learnloop-backend-6v64.onrender.com/api';
+}
 
-const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.'));
-const API_BASE = isLocalhost ? (import.meta.env.VITE_API_URL || 'http://localhost:5000/api') : 'https://learnloop-backend-6v64.onrender.com/api';
-const SOCKET_BASE = isLocalhost ? ((import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000').replace(/\/$/, '')) : 'https://learnloop-backend-6v64.onrender.com';
-console.log('[LearnLoop] API_BASE=', API_BASE, 'isLocalhost=', isLocalhost);
+function getSocketUrl() {
+  if (typeof window === 'undefined') {
+    return 'https://learnloop-backend-6v64.onrender.com';
+  }
+  const port = window.location.port;
+  const isDev = port === '5173' || port === '5174';
+  const isLocalIP = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  return (isDev || isLocalIP) ? 'http://localhost:5000' : 'https://learnloop-backend-6v64.onrender.com';
+}
+
+const API_BASE = getApiUrl();
+const SOCKET_BASE = getSocketUrl();
+
+console.log('[LearnLoop API] Initialized:', { API_BASE, hostname: typeof window !== 'undefined' ? window.location.hostname : 'ssr', port: typeof window !== 'undefined' ? window.location.port : 'ssr' });
+
 async function request(path, options = {}) {
   const response = await fetch(`${API_BASE}${path}`, {
     headers: {
@@ -51,4 +70,3 @@ export function getQuizSocket() {
   }
   return socket;
 }
-// Force rebuild 20260402-024301
