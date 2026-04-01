@@ -409,72 +409,80 @@ function App() {
         </aside>
 
         <main className="studio-panel">
-          {activeView === 'quiz' && quiz && (
-            <section className="panel content-card hero-stage">
-              <div className="section-heading compact">
-                <div>
-                  <p className="section-kicker">Live quiz</p>
-                  <h2>{quiz.topic}</h2>
+          {activeView === 'quiz' &&
+            (quiz ? (
+              <section className="panel content-card hero-stage">
+                <div className="section-heading compact">
+                  <div>
+                    <p className="section-kicker">Live quiz</p>
+                    <h2>{quiz.topic}</h2>
+                  </div>
+                  <span className="badge">{quiz.difficulty}</span>
                 </div>
-                <span className="badge">{quiz.difficulty}</span>
-              </div>
 
-              <div className="question-stack">
-                {quiz.questions.map((question) => (
-                  <article key={question.id} className="question-card premium">
-                    <div className="question-head">
-                      <span className="question-type">{question.type}</span>
-                      <span className="question-topic">{question.topic}</span>
-                    </div>
-                    <p className="question-title">{question.question}</p>
-                    {question.options?.length > 0 ? (
-                      <div className="option-grid premium">
-                        {question.options.map((option) => (
-                          <label key={option} className="option-chip">
-                            <input
-                              type="radio"
-                              name={question.id}
-                              checked={answers[question.id] === option}
-                              onChange={() =>
-                                setAnswers((previous) => ({
-                                  ...previous,
-                                  [question.id]: option,
-                                }))
-                              }
-                            />
-                            <span>{option}</span>
-                          </label>
-                        ))}
+                <div className="question-stack">
+                  {quiz.questions.map((question) => (
+                    <article key={question.id} className="question-card premium">
+                      <div className="question-head">
+                        <span className="question-type">{question.type}</span>
+                        <span className="question-topic">{question.topic}</span>
                       </div>
-                    ) : (
-                      <textarea
-                        className="answer-box"
-                        value={answers[question.id] || ''}
-                        placeholder="Write your short answer"
-                        onChange={(event) =>
-                          setAnswers((previous) => ({
-                            ...previous,
-                            [question.id]: event.target.value,
-                          }))
-                        }
-                      />
-                    )}
-                    <div className="question-actions">
-                      <button type="button" className="ghost-btn" onClick={() => explain(question)}>
-                        Explain answer
-                      </button>
-                      <button type="button" className="ghost-btn" onClick={() => bookmark(question)}>
-                        Bookmark
-                      </button>
-                    </div>
-                    {explanations[question.id] && <p className="explanation">{explanations[question.id]}</p>}
-                  </article>
-                ))}
-              </div>
-            </section>
-          )}
+                      <p className="question-title">{question.question}</p>
+                      {question.options?.length > 0 ? (
+                        <div className="option-grid premium">
+                          {question.options.map((option) => (
+                            <label key={option} className="option-chip">
+                              <input
+                                type="radio"
+                                name={question.id}
+                                checked={answers[question.id] === option}
+                                onChange={() =>
+                                  setAnswers((previous) => ({
+                                    ...previous,
+                                    [question.id]: option,
+                                  }))
+                                }
+                              />
+                              <span>{option}</span>
+                            </label>
+                          ))}
+                        </div>
+                      ) : (
+                        <textarea
+                          className="answer-box"
+                          value={answers[question.id] || ''}
+                          placeholder="Write your short answer"
+                          onChange={(event) =>
+                            setAnswers((previous) => ({
+                              ...previous,
+                              [question.id]: event.target.value,
+                            }))
+                          }
+                        />
+                      )}
+                      <div className="question-actions">
+                        <button type="button" className="ghost-btn" onClick={() => explain(question)}>
+                          Explain answer
+                        </button>
+                        <button type="button" className="ghost-btn" onClick={() => bookmark(question)}>
+                          Bookmark
+                        </button>
+                      </div>
+                      {explanations[question.id] && <p className="explanation">{explanations[question.id]}</p>}
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ) : (
+              <section className="panel content-card empty-panel">
+                <p className="section-kicker">Live quiz</p>
+                <h2>No quiz generated yet</h2>
+                <p className="muted">Fill in source material and click Generate AI Quiz to start.</p>
+              </section>
+            ))}
 
-          {activeView === 'dashboard' && dashboard && (
+          {activeView === 'dashboard' &&
+            (dashboard ? (
             <section className="panel content-card">
               <div className="section-heading compact">
                 <div>
@@ -550,7 +558,13 @@ function App() {
                 </div>
               )}
             </section>
-          )}
+            ) : (
+              <section className="panel content-card empty-panel">
+                <p className="section-kicker">Topic dashboard</p>
+                <h2>Dashboard loading</h2>
+                <p className="muted">Your progress metrics will appear here after data loads.</p>
+              </section>
+            ))}
 
           {activeView === 'revision' && (
             <section className="panel content-card">

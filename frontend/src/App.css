@@ -370,6 +370,13 @@ textarea:focus {
   gap: 1rem;
 }
 
+.empty-panel {
+  min-height: 260px;
+  align-content: center;
+  justify-items: start;
+  border-style: dashed;
+}
+
 .question-stack {
   display: grid;
   gap: 0.9rem;
