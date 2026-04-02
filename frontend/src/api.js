@@ -1,24 +1,33 @@
 import { io } from 'socket.io-client';
 
+const PROD_API = 'https://learnloop-backend-6v64.onrender.com/api';
+const PROD_SOCKET = 'https://learnloop-backend-6v64.onrender.com';
+
 // Determine if running in development or production
 function getApiUrl() {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
   if (typeof window === 'undefined') {
-    return 'https://learnloop-backend-6v64.onrender.com/api';
+    return PROD_API;
   }
   const port = window.location.port;
   const isDev = port === '5173' || port === '5174';
   const isLocalIP = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  return (isDev || isLocalIP) ? 'http://localhost:5000/api' : 'https://learnloop-backend-6v64.onrender.com/api';
+  return (isDev || isLocalIP) ? 'http://localhost:5000/api' : PROD_API;
 }
 
 function getSocketUrl() {
+  if (import.meta.env.VITE_SOCKET_URL) {
+    return import.meta.env.VITE_SOCKET_URL;
+  }
   if (typeof window === 'undefined') {
-    return 'https://learnloop-backend-6v64.onrender.com';
+    return PROD_SOCKET;
   }
   const port = window.location.port;
   const isDev = port === '5173' || port === '5174';
   const isLocalIP = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  return (isDev || isLocalIP) ? 'http://localhost:5000' : 'https://learnloop-backend-6v64.onrender.com';
+  return (isDev || isLocalIP) ? 'http://localhost:5000' : PROD_SOCKET;
 }
 
 const API_BASE = getApiUrl();
