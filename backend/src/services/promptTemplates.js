@@ -73,7 +73,7 @@ export function buildExplanationPrompt({ question, answer }) {
   return `Explain why the answer is correct in simple study-friendly language.
 Question: ${question}
 Answer: ${answer}
-Return concise text with one example.`;
+Return JSON with key: explanation. Keep it concise with one example.`;
 }
 
 export function buildCoachPrompt({ topicStats }) {
