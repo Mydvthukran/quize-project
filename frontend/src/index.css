@@ -15,9 +15,12 @@
     #eef4f8;
 }
 
-* {
-  box-sizing: border-box;
+html.dark {
+  background: #0d1821;
+  color-scheme: dark;
 }
+
+
 
 body {
   margin: 0;

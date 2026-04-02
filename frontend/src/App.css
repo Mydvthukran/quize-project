@@ -338,6 +338,12 @@ textarea:focus {
   resize: vertical;
 }
 
+.action-row {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
 .primary-actions {
   flex-wrap: wrap;
 }
